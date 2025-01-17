@@ -49,3 +49,37 @@ export default tseslint.config({
 })
 ```
 # task-management
+
+# Vite + React.js Project
+
+This project is a web application built with **Vite** and **React.js**. It features **Google Authentication** powered by **Firebase Authentication** and uses **Tailwind CSS** for styling.
+
+## Features
+
+- **Fast Development with Vite**: The project uses Vite for lightning-fast builds and development.
+- **React.js**: A modern JavaScript library for building user interfaces.
+- **Google Authentication**: Implemented using Firebase Authentication, enabling secure user sign-in with Google.
+- **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
+
+## Installation
+
+Follow these steps to set up the project on your local machine:
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/ankabattulavamsi/task-management.git
+   cd task-manager
+
+# Install Dependencies:
+# npm install
+
+
+# Configure Firebase:
+
+Create a Firebase project in the Firebase Console.
+Enable Google Authentication in the Authentication section.
+Add your Firebase configuration to the project.
+
+# Start the Development Server:
+
+# npm run dev
