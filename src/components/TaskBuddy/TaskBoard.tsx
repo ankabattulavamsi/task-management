@@ -1,4 +1,4 @@
-import { Task } from "./Types";
+import { Task } from "./types";
 
 type TaskBoardProps = {
   tasks: Task[];
@@ -26,7 +26,7 @@ const TaskBoard = ({ tasks }: TaskBoardProps) => {
               .filter((task) => task.status === status)
               .map((task) => (
                 <div key={task.id} className="bg-white p-4 rounded-lg shadow">
-                  <h3 className="font-medium text-gray-900">{task.name}</h3>
+                  {/* <h3 className="font-medium text-gray-900">{task.name}</h3> */}
                   {task.category && (
                     <span className="text-sm text-gray-500">
                       {task.category}
