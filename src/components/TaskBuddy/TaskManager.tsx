@@ -15,8 +15,14 @@ import { AddTaskForm } from "./AddTaskForm";
 import { TaskSection } from "./TaskSection";
 import { Modal } from "./Modal";
 
-const TaskManager: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+interface TaskManagerProps {
+  tasks: Task[];
+
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+}
+
+const TaskManager: React.FC<TaskManagerProps> = ({ tasks, setTasks }) => {
+  // const [tasks, setTasks] = useState<Task[]>([]);
   const [showTodo, setShowTodo] = useState<boolean>(true);
   const [showInProgress, setShowInProgress] = useState<boolean>(true);
   const [showCompleted, setShowCompleted] = useState<boolean>(true);
@@ -28,9 +34,11 @@ const TaskManager: React.FC = () => {
   const [showAddTask, setShowAddTask] = useState<boolean>(false);
   const [newTask, setNewTask] = useState<Omit<Task, "id">>({
     title: "",
+    description: "",
     dueDate: "",
     category: "WORK",
     status: "TO-DO",
+    attachments: [],
   });
 
   useEffect(() => {
@@ -125,9 +133,11 @@ const TaskManager: React.FC = () => {
       // Reset form
       setNewTask({
         title: "",
+        description: newTask.description || "",
         dueDate: "",
         category: "WORK",
         status: "TO-DO",
+        attachments: [],
       });
       setShowAddTask(false);
     } catch (error) {
@@ -206,9 +216,11 @@ const TaskManager: React.FC = () => {
                         setShowAddTask(false);
                         setNewTask({
                           title: "",
+                          description: newTask.description || "",
                           dueDate: "",
                           category: "WORK",
                           status: "TO-DO",
+                          attachments: [],
                         });
                       }}
                     />

@@ -7,7 +7,7 @@ interface ModalProps {
   task: Task | null;
   onClose: () => void;
   onUpdate: (updatedTask: Partial<Task>) => void;
-  onDelete: () => void;
+  onDelete: (taskId: string) => void;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -148,7 +148,7 @@ export const Modal: React.FC<ModalProps> = ({
                 Cancel
               </button>
               <button
-                onClick={onDelete}
+                onClick={() => onDelete(task?.id || "")}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700"
               >
                 Delete

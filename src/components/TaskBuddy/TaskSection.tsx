@@ -74,6 +74,10 @@ export const TaskSection: React.FC<TaskSectionProps> = ({
         </div>
       )}
 
+      {tasks.filter((task) => task.status === status).length === 0 && (
+        <div className="text-center py-8 text-gray-500">No tasks</div>
+      )}
+
       {show && (
         <Droppable droppableId={status}>
           {(provided) => (

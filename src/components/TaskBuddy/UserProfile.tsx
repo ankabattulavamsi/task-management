@@ -1,43 +1,85 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TaskBoard from "./TaskBoard";
-import TaskList from "./TaskList";
-// import { User, Task } from "./types";
-import { useAuth } from "../../context/AuthContext";
 import TaskManager from "./TaskManager";
+import { useAuth } from "../../context/AuthContext";
 import { AiOutlineSearch } from "react-icons/ai";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase";
+import { Task } from "./types";
+import { logout } from "../../authService";
+import CreateTaskModal from "./CreateTaskModal";
 
-type Task = {
-  id: string;
-  name: string;
-  category: string;
-  dueDate?: Date;
-  status: "TODO" | "IN_PROGRESS" | "COMPLETED";
-};
-
-type User = {
-  id: string;
-  name: string;
-  avatar: string;
-};
-
-type LayoutProps = {
-  view: "list" | "board";
-  setView: (view: "list" | "board") => void;
-};
-
-const UserProfile = ({ view, setView }: LayoutProps) => {
-  // const [view, setView] = useState<"list" | "board">("list");
-  // const [tasks, setTasks] = useState<Task[]>([]);
-  // const { user } = useAuth();
+const UserProfile = () => {
+  const [view, setView] = useState("list");
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterDueDate, setFilterDueDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const { user } = useAuth();
 
-  const currentUser: User = {
-    id: "1",
-    name: "Aravind",
-    avatar: "/api/placeholder/40/40",
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "tasks"));
+        const taskList = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title || "",
+            description: data.description || "",
+            dueDate: data.dueDate || "",
+            category: data.category || "",
+            status: data.status || "",
+            attachments: data.attachments || [],
+            ...data,
+          };
+        });
+        setTasks(taskList);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  const handleTaskCreated = (task: Task) => {
+    // Add the newly created task to the tasks state
+    setTasks((prevTasks) => [...prevTasks, task]);
   };
 
-  if (!user) return null; // No user logged in, nothing to display.
+  const filteredTasks = tasks.filter((task) => {
+    const matchesCategory = !filterCategory || task.category === filterCategory;
+    const matchesSearch =
+      !searchQuery ||
+      task.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+    let matchesDueDate = true;
+    if (filterDueDate) {
+      const today = new Date();
+      const taskDate = new Date(task.dueDate);
+
+      switch (filterDueDate) {
+        case "today":
+          matchesDueDate = taskDate.toDateString() === today.toDateString();
+          break;
+        case "week":
+          const weekFromNow = new Date(today.setDate(today.getDate() + 7));
+          matchesDueDate = taskDate <= weekFromNow;
+          break;
+        case "month":
+          const monthFromNow = new Date(today.setMonth(today.getMonth() + 1));
+          matchesDueDate = taskDate <= monthFromNow;
+          break;
+      }
+    }
+
+    return matchesCategory && matchesSearch && matchesDueDate;
+  });
+
+  console.log("user", user);
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -48,11 +90,13 @@ const UserProfile = ({ view, setView }: LayoutProps) => {
             <h1 className="text-xl font-medium">TaskBuddy</h1>
             <div className="flex items-center space-x-2">
               <img
-                src={"/api/placeholder/40/40"}
-                alt={"vamsi"}
+                src={user.photoURL || ""}
+                alt="avatar"
                 className="w-8 h-8 rounded-full"
               />
-              <span className="text-sm text-gray-700">vamsi</span>
+              <span className="text-sm text-gray-700">
+                {user.displayName || "User"}
+              </span>
             </div>
           </div>
         </div>
@@ -85,7 +129,10 @@ const UserProfile = ({ view, setView }: LayoutProps) => {
               </button>
             </nav>
           </div>
-          <button className="text-sm text-gray-600 bg-white px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50">
+          <button
+            className="text-sm text-gray-600 bg-white px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50"
+            onClick={logout}
+          >
             Logout
           </button>
         </div>
@@ -95,18 +142,26 @@ const UserProfile = ({ view, setView }: LayoutProps) => {
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-500">Filter by:</span>
             <div className="relative">
-              <select className="appearance-none bg-white border border-gray-200 rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
-                <option>Category</option>
-                <option>Work</option>
-                <option>Personal</option>
+              <select
+                className="appearance-none bg-white border border-gray-200 rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+              >
+                <option value="">Category</option>
+                <option value="WORK">Work</option>
+                <option value="PERSONAL">Personal</option>
               </select>
             </div>
             <div className="relative">
-              <select className="appearance-none bg-white border border-gray-200 rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
-                <option>Due Date</option>
-                <option>Today</option>
-                <option>This Week</option>
-                <option>This Month</option>
+              <select
+                className="appearance-none bg-white border border-gray-200 rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                value={filterDueDate}
+                onChange={(e) => setFilterDueDate(e.target.value)}
+              >
+                <option value="">Due Date</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
               </select>
             </div>
           </div>
@@ -116,11 +171,16 @@ const UserProfile = ({ view, setView }: LayoutProps) => {
               <input
                 type="text"
                 placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-64 pl-3 pr-10 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500"
               />
               <AiOutlineSearch className="absolute w-5 h-5 right-3 top-2.5 text-gray-400" />
             </div>
-            <button className="px-4 py-2 text-sm text-white bg-purple-600 rounded-md hover:bg-purple-700">
+            <button
+              className="px-4 py-2 text-sm text-white bg-purple-600 rounded-md hover:bg-purple-700"
+              onClick={() => setShowCreateTaskModal(true)}
+            >
               ADD TASK
             </button>
           </div>
@@ -128,9 +188,18 @@ const UserProfile = ({ view, setView }: LayoutProps) => {
 
         {/* Main Content */}
         <div>
-          {view === "list" ? <TaskManager /> : <TaskBoard tasks={[]} />}
+          {view === "list" ? (
+            <TaskManager tasks={filteredTasks} setTasks={setTasks} />
+          ) : (
+            <TaskBoard tasks={filteredTasks} setTasks={setTasks} />
+          )}
         </div>
       </div>
+      <CreateTaskModal
+        isOpen={showCreateTaskModal}
+        onClose={() => setShowCreateTaskModal(false)}
+        onTaskCreated={handleTaskCreated}
+      />
     </div>
   );
 };

@@ -25,6 +25,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
+      const today = new Date();
+      // Compare the year, month, and day
+      if (
+        date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth() &&
+        date.getDate() === today.getDate()
+      ) {
+        return "Today";
+      }
       return date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -34,6 +43,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       return dateString;
     }
   };
+
   return (
     <div
       ref={provided.innerRef}
@@ -54,7 +64,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       </div>
 
       <div className="col-span-2 flex items-center text-sm text-gray-500">
-        <AiOutlineCalendar className="inline mr-1" />
+        {/* <AiOutlineCalendar className="inline mr-1" /> */}
         <span>{formatDate(task.dueDate)}</span>
       </div>
 
